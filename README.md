@@ -5,101 +5,83 @@
 
 #include "BluetoothSerial.h"
 BluetoothSerial SerialBT;
-int LED1 = 14, LED2 = 32;
-int M1_front = 17, M1_back = 4, M1_pwm = 2;
+int LED1 = 14, LED2 = 32, speed = 10;
+int M1_front = 4, M1_back = 17, M1_pwm = 2;
 int M2_front = 16, M2_back = 0, M2_pwm = 15;
+int buttonState = 0;
+int lastButtonState = 0;
 
-
-int command; //Int to store app command state.
-int speedCar = 255; // Initial car speed set 0 to 255.
-
-
-
-void setup(){
- Serial.begin(9600);
- SerialBT.begin("Bluetooth RC Car"); Serial.print("BT Started!");
- ledcSetup(0,1000,8); ledcAttachPin(M1_pwm,0);
- ledcSetup(1,1000,8); ledcAttachPin(M2_pwm,1);
- pinMode(LED1, OUTPUT); pinMode(LED2, OUTPUT);
- pinMode(M1_front, OUTPUT); pinMode(M1_back, OUTPUT);
- pinMode(M2_front, OUTPUT); pinMode(M2_back, OUTPUT);
- Stop();
+void setup() {
+  Serial.begin(9600);
+  SerialBT.begin("Bluetooth RC Car");
+  Serial.print("BT Started!");
+  ledcSetup(0, 1000, 8);
+  ledcAttachPin(M1_pwm, 0);
+  ledcSetup(1, 1000, 8);
+  ledcAttachPin(M2_pwm, 1);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  pinMode(M1_front, OUTPUT);
+  pinMode(M1_back, OUTPUT);
+  pinMode(M2_front, OUTPUT);
+  pinMode(M2_back, OUTPUT);
 }
 
-
-
-void forward()
-{
-  digitalWrite(17,HIGH);
-  digitalWrite(16,HIGH);
+void loop() {
+  if (SerialBT.available()) {
+    char x = SerialBT.read();
+    Serial.print(x);
+    if (x == 'F') motor(25 * speed, 25 * speed);
+    else if (x == 'B') motor(-25 * speed, -25 * speed);
+    else if (x == 'L') motor(-25 * speed, 25 * speed);
+    else if (x == 'R') motor(25 * speed, -25 * speed);
+    else if (x == 'G') motor(0, 25 * speed);
+    else if (x == 'I') motor(25 * speed, 0);
+    else if (x == 'H') motor(0, -25 * speed);
+    else if (x == 'J') motor(-25 * speed, 0);
+    else if (x == 'S') motor(0, 0);
+    else if (x == 'W') {
+      digitalWrite(LED1, 1);
+      digitalWrite(LED2, 1);
+    } else if (x == 'w') {
+      digitalWrite(LED1, 0);
+      digitalWrite(LED2, 0);
+    } else if (x >= '0' && x <= '9') speed = x - '0';
+    else if (x == 'q') speed = 10;
+  }
 }
 
-void backward()
-{
-  digitalWrite(4,HIGH);
-  digitalWrite(0,HIGH);
-}
-void left()
-{
-  digitalWrite(4,HIGH);
-}
-void right()
-{
-  digitalWrite(17,HIGH);
-}
-
-void ledon()
-{
-  digitalWrite(14,HIGH);
-  digitalWrite(32,HIGH);
-}
-
-void ledoff()
-{
-  digitalWrite(14,LOW);
-  digitalWrite(32,LOW);
-}
-
-
-void Stop()
-{
-  digitalWrite(17,LOW);
-  digitalWrite(16,LOW);
-  digitalWrite(4,LOW);
-  digitalWrite(0,LOW);
-}
-
-void loop(){
+void motor(int a, int b) {
+  Serial.print("a = ");
+  Serial.print(a);
+  Serial.print(", b = ");
+  Serial.println(b);
+  if (a > 0) {
+    digitalWrite(M2_front, 1);
+    digitalWrite(M2_back, 0);
+  } 
   
-if (Serial.available() > 0) {
-  command = Serial.read();
-  Stop();       //Initialize with motors stopped.
+  else if (a = -a){
+    digitalWrite(M2_front, 0);
+    digitalWrite(M2_back, 1);
+  }
+  else {
+    digitalWrite(M2_front, 0);
+    digitalWrite(M2_back, 0);
+  } 
+  if (b > 0) {
+    digitalWrite(M1_front, 1);
+    digitalWrite(M1_back, 0);
+  } 
+  
+  else if (b = -b){
+    digitalWrite(M1_front, 0);
+    digitalWrite(M1_back, 1);
+  }
+  ledcWrite(1, a);
+  ledcWrite(0, b);
+}
 
-if (ledon) {digitalWrite(LED1, HIGH); digitalWrite(LED2, HIGH);}
-if (ledoff) {digitalWrite(LED1, LOW); digitalWrite(LED2, LOW);}
-
-
-switch (command) {
-case 'F':forward();break;
-case 'B':backward();break;
-case 'L':left();break;
-case 'R':right();break;
-case 'S':Stop();break;
-case '0':speedCar = 0;break;
-case '1':speedCar = 25;break;
-case '2':speedCar = 50;break;
-case '3':speedCar = 75;break;
-case '4':speedCar = 100;break;
-case '5':speedCar = 125;break;
-case '6':speedCar = 150;break;
-case '7':speedCar = 175;break;
-case '8':speedCar = 200;break;
-case '9':speedCar = 225;break;
-case 'q':speedCar = 255;break;
-case 'W':ledon();break;
-case 'w':ledoff();break;
-}}}
-
-
+  
 
 
